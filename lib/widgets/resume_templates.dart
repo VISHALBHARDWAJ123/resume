@@ -451,6 +451,8 @@ class ProfessionalLayout extends ResumeLayout {
 
   @override
   Widget build(BuildContext context) {
+    final padding = isDesktop ? const EdgeInsets.all(50) : const EdgeInsets.all(24);
+
     return Align(
       alignment: Alignment.topCenter,
       child: Container(
@@ -464,80 +466,126 @@ class ProfessionalLayout extends ResumeLayout {
             // Top Accent Bar
             Container(height: 12, color: Colors.orange.shade800),
             Padding(
-              padding: const EdgeInsets.all(50),
+              padding: padding,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(data.personalInfo.name.toUpperCase(), 
-                              style: theme.h1.copyWith(fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.black)),
-                            const SizedBox(height: 20),
-                            const Divider(thickness: 2, color: Colors.black),
-                            const SizedBox(height: 20),
-                            _buildProfessionalSummary(),
-                          ],
+                  if (isDesktop)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(data.personalInfo.name.toUpperCase(), 
+                                style: theme.h1.copyWith(fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: 1.5, color: Colors.black)),
+                              const SizedBox(height: 20),
+                              const Divider(thickness: 2, color: Colors.black),
+                              const SizedBox(height: 20),
+                              _buildProfessionalSummary(),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 40),
-                      // Profile Pic Placeholder
-                      _buildProfilePic(),
-                    ],
-                  ),
+                        const SizedBox(width: 40),
+                        _buildProfilePic(),
+                      ],
+                    )
+                  else
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(child: _buildProfilePic()),
+                        const SizedBox(height: 30),
+                        Text(data.personalInfo.name.toUpperCase(), 
+                          style: theme.h1.copyWith(fontSize: 28, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Colors.black),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        const Divider(thickness: 2, color: Colors.black),
+                        const SizedBox(height: 16),
+                        _buildProfessionalSummary(),
+                      ],
+                    ),
                   const SizedBox(height: 40),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Main Content
-                      Expanded(
-                        flex: 2,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildSectionHeader('EXPERIENCE'),
-                            ...data.experiences.map((exp) => _buildExperienceItem(exp)),
-                            const SizedBox(height: 24),
-                            _buildSectionHeader('EDUCATION'),
-                            ...data.education.map((edu) => _buildEducationItem(edu)),
-                          ],
+                  if (isDesktop)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Main Content
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionHeader('EXPERIENCE'),
+                              ...data.experiences.map((exp) => _buildExperienceItem(exp)),
+                              const SizedBox(height: 24),
+                              _buildSectionHeader('EDUCATION'),
+                              ...data.education.map((edu) => _buildEducationItem(edu)),
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 40),
-                      // Sidebar
-                      Expanded(
-                        flex: 1,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildSectionHeader('CONTACT'),
-                            _buildContactInfo(),
-                            const SizedBox(height: 24),
-                            _buildSectionHeader('CORE QUALIFICATIONS'),
-                            ...data.skillCategories.map((cat) => _buildSkillCategory(cat)),
-                            const SizedBox(height: 24),
-                            _buildSectionHeader('PROJECTS'),
-                            ...data.projects.take(3).map((p) => Padding(
-                              padding: const EdgeInsets.only(bottom: 12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(p.title, style: theme.body.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
-                                  Text(p.description, style: theme.bodySecondary.copyWith(fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                ],
-                              ),
-                            )),
-                          ],
+                        const SizedBox(width: 40),
+                        // Sidebar
+                        Expanded(
+                          flex: 1,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionHeader('CONTACT'),
+                              _buildContactInfo(),
+                              const SizedBox(height: 24),
+                              _buildSectionHeader('CORE QUALIFICATIONS'),
+                              ...data.skillCategories.map((cat) => _buildSkillCategory(cat)),
+                              const SizedBox(height: 24),
+                              _buildSectionHeader('PROJECTS'),
+                              ...data.projects.take(3).map((p) => Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(p.title, style: theme.body.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
+                                    Text(p.description, style: theme.bodySecondary.copyWith(fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
+                                  ],
+                                ),
+                              )),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    )
+                  else
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSectionHeader('CONTACT'),
+                        _buildContactInfo(),
+                        const SizedBox(height: 32),
+                        _buildSectionHeader('EXPERIENCE'),
+                        ...data.experiences.map((exp) => _buildExperienceItem(exp)),
+                        const SizedBox(height: 32),
+                        _buildSectionHeader('CORE QUALIFICATIONS'),
+                        ...data.skillCategories.map((cat) => _buildSkillCategory(cat)),
+                        const SizedBox(height: 32),
+                        _buildSectionHeader('EDUCATION'),
+                        ...data.education.map((edu) => _buildEducationItem(edu)),
+                        const SizedBox(height: 32),
+                        _buildSectionHeader('PROJECTS'),
+                        ...data.projects.map((p) => Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(p.title, style: theme.body.copyWith(fontWeight: FontWeight.bold, fontSize: 13)),
+                              Text(p.description, style: theme.bodySecondary.copyWith(fontSize: 11)),
+                            ],
+                          ),
+                        )),
+                      ],
+                    ),
                 ],
               ),
             ),
@@ -687,97 +735,157 @@ class CreativeLayout extends ResumeLayout {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 900),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: theme.cardShadow,
+    if (isDesktop) {
+      return Align(
+        alignment: Alignment.topCenter,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 900),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: theme.cardShadow,
+          ),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Sidebar
+                Container(
+                  width: 260,
+                  color: const Color(0xFFF4F4F4),
+                  padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 40),
+                  child: _buildSidebarContent(),
+                ),
+                // Main Content
+                Expanded(
+                  child: Column(
+                    children: [
+                      _buildHeader(),
+                      Padding(
+                        padding: const EdgeInsets.all(40),
+                        child: _buildMainContent(),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      );
+    } else {
+      return Align(
+        alignment: Alignment.topCenter,
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            boxShadow: theme.cardShadow,
+          ),
+          child: Column(
             children: [
-              // Sidebar
+              _buildHeader(),
               Container(
-                width: 260,
+                width: double.infinity,
                 color: const Color(0xFFF4F4F4),
-                padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 40),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Red Logo/Icon Box
-                    Container(
-                      width: 70,
-                      height: 70,
-                      color: const Color(0xFF9E3E3E),
-                      child: const Center(child: Icon(Icons.architecture, color: Colors.white, size: 36)),
-                    ),
-                    const SizedBox(height: 50),
-                    _buildSidebarSection('CORE QUALIFICATIONS', 
-                      data.skillCategories.expand((c) => c.skills).map((s) => '• $s').toList()),
-                    const SizedBox(height: 35),
-                    _buildSidebarSection('EDUCATION', 
-                      data.education.map((e) => '${e.degree}\n${e.institution}').toList()),
-                    const SizedBox(height: 35),
-                    _buildSidebarSection('LANGUAGES', ['• Hindi: native', '• English: fluent', '• Bengali: intermediate']),
-                    const SizedBox(height: 35),
-                    _buildSidebarSection('INTERESTS', ['• Recreational Football', '• Team Captain', '• Community Theater']),
-                  ],
-                ),
+                padding: const EdgeInsets.all(30),
+                child: _buildSidebarContent(),
               ),
-              // Main Content
-              Expanded(
-                child: Column(
-                  children: [
-                    // Header
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 50),
-                      color: const Color(0xFFFAF0F0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(data.personalInfo.name.toUpperCase(), 
-                            style: theme.h1.copyWith(fontSize: 38, letterSpacing: 3, color: const Color(0xFF333333), fontWeight: FontWeight.w900)),
-                          const SizedBox(height: 25),
-                          Container(height: 1, width: double.infinity, color: Colors.black26),
-                          const SizedBox(height: 15),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _headerInfoItem(data.personalInfo.location),
-                              _headerInfoItem(data.personalInfo.phone),
-                              _headerInfoItem(data.personalInfo.email),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(40),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildSectionTitle('PROFESSIONAL SUMMARY'),
-                          Text(data.personalInfo.bio, style: theme.bodySecondary.copyWith(color: Colors.black87, height: 1.6)),
-                          const SizedBox(height: 35),
-                          _buildSectionTitle('EXPERIENCE'),
-                          ...data.experiences.map((exp) => _buildExperienceItem(exp)),
-                          const SizedBox(height: 35),
-                          _buildSectionTitle('PROJECTS'),
-                          ...data.projects.map((proj) => _buildProjectItem(proj)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: _buildMainContent(),
               ),
             ],
           ),
         ),
+      );
+    }
+  }
+
+  Widget _buildSidebarContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Red Logo/Icon Box
+        Container(
+          width: 70,
+          height: 70,
+          color: const Color(0xFF9E3E3E),
+          child: const Center(child: Icon(Icons.architecture, color: Colors.white, size: 36)),
+        ),
+        const SizedBox(height: 50),
+        _buildSidebarSection('CORE QUALIFICATIONS', 
+          data.skillCategories.expand((c) => c.skills).map((s) => '• $s').toList()),
+        const SizedBox(height: 35),
+        _buildSidebarSection('EDUCATION', 
+          data.education.map((e) => '${e.degree}\n${e.institution}').toList()),
+        const SizedBox(height: 35),
+        _buildSidebarSection('LANGUAGES', ['• Hindi: native', '• English: fluent', '• Bengali: intermediate']),
+        const SizedBox(height: 35),
+        _buildSidebarSection('INTERESTS', ['• Recreational Football', '• Team Captain', '• Community Theater']),
+      ],
+    );
+  }
+
+  Widget _buildHeader() {
+    final padding = isDesktop 
+      ? const EdgeInsets.symmetric(horizontal: 40, vertical: 50)
+      : const EdgeInsets.symmetric(horizontal: 24, vertical: 40);
+
+    return Container(
+      width: double.infinity,
+      padding: padding,
+      color: const Color(0xFFFAF0F0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(data.personalInfo.name.toUpperCase(), 
+            style: theme.h1.copyWith(
+              fontSize: isDesktop ? 38 : 30, 
+              letterSpacing: isDesktop ? 3 : 2, 
+              color: const Color(0xFF333333), 
+              fontWeight: FontWeight.w900,
+            )),
+          const SizedBox(height: 25),
+          Container(height: 1, width: double.infinity, color: Colors.black26),
+          const SizedBox(height: 15),
+          if (isDesktop)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _headerInfoItem(data.personalInfo.location),
+                _headerInfoItem(data.personalInfo.phone),
+                _headerInfoItem(data.personalInfo.email),
+              ],
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _headerInfoItem(data.personalInfo.location),
+                const SizedBox(height: 8),
+                _headerInfoItem(data.personalInfo.phone),
+                const SizedBox(height: 8),
+                _headerInfoItem(data.personalInfo.email),
+              ],
+            ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildMainContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle('PROFESSIONAL SUMMARY'),
+        Text(data.personalInfo.bio, style: theme.bodySecondary.copyWith(color: Colors.black87, height: 1.6)),
+        const SizedBox(height: 35),
+        _buildSectionTitle('EXPERIENCE'),
+        ...data.experiences.map((exp) => _buildExperienceItem(exp)),
+        const SizedBox(height: 35),
+        _buildSectionTitle('PROJECTS'),
+        ...data.projects.map((proj) => _buildProjectItem(proj)),
+      ],
     );
   }
 

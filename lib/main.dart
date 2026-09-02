@@ -193,7 +193,8 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
   }
 
   void _triggerPrint() {
-    printer.printResume();
+    final theme = ResumeTheme(isDark: _isDark);
+    printer.printResume(_resumeData, _selectedTemplate, theme);
   }
 
   @override
