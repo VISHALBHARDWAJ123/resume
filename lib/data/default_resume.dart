@@ -12,6 +12,7 @@ final defaultResumeData = ResumeData(
     github: 'https://github.com/VISHALBHARDWAJ123',
     linkedin: 'https://www.linkedin.com/in/vishal-bhardwaj-574385200',
     website: '',
+    imageUrl:   'https://raw.githubusercontent.com/VISHALBHARDWAJ123/resume/main/IMG_2242.JPG',
   ),
 
   skillCategories: [

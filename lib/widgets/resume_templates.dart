@@ -548,17 +548,23 @@ class ProfessionalLayout extends ResumeLayout {
   }
 
   Widget _buildProfilePic() {
+
     return Container(
       width: 160,
       height: 180,
       decoration: BoxDecoration(
         color: Colors.grey.shade200,
         border: Border.all(color: Colors.black, width: 1),
-        image: const DecorationImage(
-          image: NetworkImage('https://i.pravatar.cc/400?u=professional'),
-          fit: BoxFit.cover,
-        ),
+        image: data.personalInfo.imageUrl.isNotEmpty
+            ? DecorationImage(
+                image: NetworkImage(data.personalInfo.imageUrl),
+                fit: BoxFit.cover,
+              )
+            : null,
       ),
+      child: data.personalInfo.imageUrl.isEmpty
+          ? const Center(child: Icon(Icons.person, size: 80, color: Colors.black26))
+          : null,
     );
   }
 

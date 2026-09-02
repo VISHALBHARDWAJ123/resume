@@ -54,6 +54,7 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
   late TextEditingController _githubController;
   late TextEditingController _linkedinController;
   late TextEditingController _websiteController;
+  late TextEditingController _imageController;
 
   // Raw JSON controller for import/export
   final TextEditingController _jsonController = TextEditingController();
@@ -76,6 +77,7 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
     _githubController = TextEditingController(text: _resumeData.personalInfo.github);
     _linkedinController = TextEditingController(text: _resumeData.personalInfo.linkedin);
     _websiteController = TextEditingController(text: _resumeData.personalInfo.website);
+    _imageController = TextEditingController(text: _resumeData.personalInfo.imageUrl);
     _jsonController.text = _resumeData.toJson();
   }
 
@@ -90,6 +92,7 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
     _githubController.dispose();
     _linkedinController.dispose();
     _websiteController.dispose();
+    _imageController.dispose();
     _jsonController.dispose();
     super.dispose();
   }
@@ -140,6 +143,7 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
           github: _githubController.text,
           linkedin: _linkedinController.text,
           website: _websiteController.text,
+          imageUrl: _imageController.text,
         ),
       );
       _jsonController.text = _resumeData.toJson();
@@ -497,6 +501,7 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
           _buildTextField('Website Link', _websiteController, theme),
           _buildTextField('GitHub URL', _githubController, theme),
           _buildTextField('LinkedIn URL', _linkedinController, theme),
+          _buildTextField('Profile Image URL', _imageController, theme),
         ],
       ),
     );

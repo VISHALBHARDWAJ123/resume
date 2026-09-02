@@ -10,6 +10,7 @@ class PersonalInfo {
   final String github;
   final String linkedin;
   final String website;
+  final String imageUrl;
 
   PersonalInfo({
     required this.name,
@@ -21,6 +22,7 @@ class PersonalInfo {
     required this.github,
     required this.linkedin,
     required this.website,
+    required this.imageUrl,
   });
 
   PersonalInfo copyWith({
@@ -33,6 +35,7 @@ class PersonalInfo {
     String? github,
     String? linkedin,
     String? website,
+    String? imageUrl,
   }) {
     return PersonalInfo(
       name: name ?? this.name,
@@ -44,6 +47,7 @@ class PersonalInfo {
       github: github ?? this.github,
       linkedin: linkedin ?? this.linkedin,
       website: website ?? this.website,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 
@@ -58,6 +62,7 @@ class PersonalInfo {
       'github': github,
       'linkedin': linkedin,
       'website': website,
+      'imageUrl': imageUrl,
     };
   }
 
@@ -72,6 +77,7 @@ class PersonalInfo {
       github: map['github'] ?? '',
       linkedin: map['linkedin'] ?? '',
       website: map['website'] ?? '',
+      imageUrl: map['imageUrl'] ?? '',
     );
   }
 }
