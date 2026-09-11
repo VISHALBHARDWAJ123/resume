@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:google_fonts/google_fonts.dart';
@@ -43,6 +44,8 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
   late ResumeData _resumeData;
   bool _isLoading = true;
   ResumeTemplateType _selectedTemplate = ResumeTemplateType.modern;
+  ui.FragmentShader? _shader;
+  late AnimationController _shaderController;
 
   // Controllers for general editing
   late TextEditingController _nameController;
@@ -65,6 +68,22 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
     _resumeData = defaultResumeData;
     _initControllers();
     _loadData();
+    _loadShader();
+    _shaderController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat();
+  }
+
+  Future<void> _loadShader() async {
+    try {
+      final program = await ui.FragmentProgram.fromAsset('assets/shaders/mesh_gradient.frag');
+      setState(() {
+        _shader = program.fragmentShader();
+      });
+    } catch (e) {
+      debugPrint('Error loading shader: $e');
+    }
   }
 
   void _initControllers() {
@@ -94,6 +113,7 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
     _websiteController.dispose();
     _imageController.dispose();
     _jsonController.dispose();
+    _shaderController.dispose();
     super.dispose();
   }
 
@@ -216,30 +236,19 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
       body: SafeArea(
         child: Stack(
           children: [
-            // Fixed Mesh Gradients background (Ethereal Glass feel in dark mode)
-            if (_isDark)
-              Container(
-                width: double.infinity,
-                height: double.infinity,
-                decoration: const BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.topRight,
-                    radius: 0.8,
-                    colors: [Color(0xFF1B3127), Colors.transparent],
-                  ),
-                ),
-              ),
-            if (_isDark)
-              Container(
-                width: double.infinity,
-                height: double.infinity,
-                decoration: const BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.bottomLeft,
-                    radius: 0.7,
-                    colors: [Color(0xFF2C2219), Colors.transparent],
-                  ),
-                ),
+            // Shader Background
+            if (_isDark && _shader != null)
+              AnimatedBuilder(
+                animation: _shaderController,
+                builder: (context, _) {
+                  return CustomPaint(
+                    painter: ShaderPainter(
+                      shader: _shader!,
+                      time: DateTime.now().millisecondsSinceEpoch / 1000.0,
+                    ),
+                    child: Container(),
+                  );
+                },
               ),
 
             // Main Contents Row
@@ -987,5 +996,27 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
         ],
       ),
     );
+  }
+}
+
+class ShaderPainter extends CustomPainter {
+  final ui.FragmentShader shader;
+  final double time;
+
+  ShaderPainter({required this.shader, required this.time});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    shader.setFloat(0, time);
+    shader.setFloat(1, size.width);
+    shader.setFloat(2, size.height);
+
+    final paint = Paint()..shader = shader;
+    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant ShaderPainter oldDelegate) {
+    return oldDelegate.time != time;
   }
 }
