@@ -4,85 +4,84 @@
 
 uniform float uTime;
 uniform vec2 uSize;
+uniform float uSectionImpact; // 0.0 to 1.0 based on interaction
 
 out vec4 fragColor;
 
-// Precision-friendly hash function
-float hash(vec2 p) {
-    p = fract(p * vec2(123.34, 456.21));
-    p += dot(p, p + 45.32);
-    return fract(p.x * p.y);
+mat2 rot(float a) {
+    float c = cos(a), s = sin(a);
+    return mat2(vec2(c, s), vec2(-s, c));
 }
 
-// 2D Noise
-float noise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    f = f * f * (3.0 - 2.0 * f);
-    float a = hash(i);
-    float b = hash(i + vec2(1.0, 0.0));
-    float c = hash(i + vec2(0.0, 1.0));
-    float d = hash(i + vec2(1.0, 1.0));
-    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+const float pi = 3.14159265359;
+const float pi2 = pi * 2.0;
+
+vec2 pmod(vec2 p, float r) {
+    float a = atan(p.x, p.y) + pi / r;
+    float n = pi2 / r;
+    a = floor(a / n) * n;
+    return p * rot(-a);
 }
 
-// Fractional Brownian Motion for nebulae
-float fbm(vec2 p) {
-    float v = 0.0;
-    float a = 0.5;
-    // Standard mat2 constructor using column vectors
-    mat2 m = mat2(vec2(0.8, 0.6), vec2(-0.6, 0.8));
+float box(vec3 p, vec3 b) {
+    vec3 d = abs(p) - b;
+    return min(max(d.x, max(d.y, d.z)), 0.0) + length(max(d, 0.0));
+}
+
+float ifsBox(vec3 p) {
     for (int i = 0; i < 5; i++) {
-        v += a * noise(p);
-        p = m * p * 2.0;
-        a *= 0.5;
+        p = abs(p) - 1.0;
+        p.xy *= rot(uTime * 0.3 + uSectionImpact * 2.0);
+        p.xz *= rot(uTime * 0.1);
     }
-    return v;
+    p.xz *= rot(uTime);
+    return box(p, vec3(0.4, 0.8 + uSectionImpact * 0.5, 0.3));
+}
+
+float map(vec3 p) {
+    vec3 p1 = p;
+    p1.x = mod(p1.x - 5.0, 10.0) - 5.0;
+    p1.y = mod(p1.y - 5.0, 10.0) - 5.0;
+    p1.z = mod(p1.z, 16.0) - 8.0;
+    // Modulate pmod by section impact
+    p1.xy = pmod(p1.xy, 5.0 + floor(uSectionImpact * 3.0));
+    return ifsBox(p1);
 }
 
 void main() {
-    vec2 uv = FlutterFragCoord().xy / uSize;
-    float ratio = uSize.x / uSize.y;
-    vec2 p = (uv - 0.5);
-    p.x *= ratio;
+    vec2 fragCoord = FlutterFragCoord().xy;
+    vec2 p = (fragCoord.xy * 2.0 - uSize.xy) / min(uSize.x, uSize.y);
 
-    float t = uTime * 0.05;
+    vec3 cPos = vec3(0.0, 0.0, -3.0 * uTime);
+    vec3 cDir = normalize(vec3(0.0, 0.0, -1.0));
+    vec3 cUp = vec3(sin(uTime), 1.0, 0.0);
+    vec3 cSide = cross(cDir, cUp);
 
-    // Slow rotation for the galaxy feel
-    float ang = t * 0.2;
-    float c = cos(ang);
-    float s = sin(ang);
-    // Standard rotation matrix constructor
-    mat2 rot = mat2(vec2(c, -s), vec2(s, c));
-    p = rot * p;
+    vec3 ray = normalize(cSide * p.x + cUp * p.y + cDir);
 
-    // Nebula Layer 1 (Deep Blues/Purples)
-    vec2 p1 = p * 2.0 + vec2(t, t * 0.5);
-    float n1 = fbm(p1);
-    vec3 col1 = vec3(0.1, 0.1, 0.4) * n1;
+    float acc = 0.0;
+    float acc2 = 0.0;
+    float t = 0.0;
+    for (int i = 0; i < 60; i++) { // Reduced iterations for performance on web
+        vec3 pos = cPos + ray * t;
+        float dist = map(pos);
+        dist = max(abs(dist), 0.02);
+        float a = exp(-dist * 3.0);
+        if (mod(length(pos) + 24.0 * uTime, 30.0) < 3.0) {
+            a *= 2.0;
+            acc2 += a;
+        }
+        acc += a;
+        t += dist * 0.5;
+        if (t > 20.0) break;
+    }
 
-    // Nebula Layer 2 (Magentas/Teals)
-    vec2 p2 = p * 3.0 - vec2(t * 0.7, t);
-    float n2 = fbm(p2);
-    vec3 col2 = vec3(0.4, 0.1, 0.3) * n2;
+    // Color changes based on interaction
+    vec3 baseCol = mix(vec3(0.01, 0.011, 0.012), vec3(0.02, 0.005, 0.015), uSectionImpact);
+    vec3 col = vec3(acc * baseCol.x, acc * baseCol.y + acc2 * 0.002, acc * baseCol.z + acc2 * 0.005);
 
-    // Center Glow
-    float dist = length(p);
-    float glow = exp(-dist * 4.0);
-    vec3 centerCol = vec3(0.8, 0.9, 1.0) * glow;
+    // Add interaction highlights
+    col += vec3(0.1, 0.2, 0.3) * uSectionImpact * exp(-t * 0.1);
 
-    // Star Field
-    float stars = pow(hash(uv * 500.0), 50.0) * 1.5;
-    // Twinkling effect
-    stars *= 0.8 + 0.5 * sin(uTime * 2.0 + hash(uv) * 10.0);
-
-    // Mix everything
-    vec3 color = mix(col1, col2, n2 * 0.5);
-    color += centerCol * 0.3;
-    color += stars;
-
-    // Darken edges for deep space feel
-    color *= smoothstep(1.2, 0.2, dist);
-
-    fragColor = vec4(color, 1.0);
+    fragColor = vec4(col, 1.0 - t * 0.03);
 }

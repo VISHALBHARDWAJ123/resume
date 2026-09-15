@@ -46,6 +46,8 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
   ResumeTemplateType _selectedTemplate = ResumeTemplateType.modern;
   ui.FragmentShader? _shader;
   late AnimationController _shaderController;
+  final Stopwatch _stopwatch = Stopwatch();
+  double _sectionImpact = 0.0;
 
   // Controllers for general editing
   late TextEditingController _nameController;
@@ -69,6 +71,7 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
     _initControllers();
     _loadData();
     _loadShader();
+    _stopwatch.start();
     _shaderController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 1),
@@ -244,7 +247,8 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
                   return CustomPaint(
                     painter: ShaderPainter(
                       shader: _shader!,
-                      time: DateTime.now().millisecondsSinceEpoch / 1000.0,
+                      time: _stopwatch.elapsedMilliseconds / 1000.0,
+                      impact: _sectionImpact,
                     ),
                     child: Container(),
                   );
@@ -298,6 +302,20 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
   }
 
   Widget _buildSelectedLayout(ResumeTheme theme, bool isDesktop) {
+    final layout = _getLayout(theme, isDesktop);
+    return MouseRegion(
+      onEnter: (_) => setState(() => _sectionImpact = 1.0),
+      onExit: (_) => setState(() => _sectionImpact = 0.0),
+      onHover: (_) {
+        if (_sectionImpact != 1.0) {
+          setState(() => _sectionImpact = 1.0);
+        }
+      },
+      child: layout,
+    );
+  }
+
+  Widget _getLayout(ResumeTheme theme, bool isDesktop) {
     switch (_selectedTemplate) {
       case ResumeTemplateType.modern:
         return ModernLayout(data: _resumeData, theme: theme, isDesktop: isDesktop);
@@ -1002,14 +1020,16 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
 class ShaderPainter extends CustomPainter {
   final ui.FragmentShader shader;
   final double time;
+  final double impact;
 
-  ShaderPainter({required this.shader, required this.time});
+  ShaderPainter({required this.shader, required this.time, required this.impact});
 
   @override
   void paint(Canvas canvas, Size size) {
     shader.setFloat(0, time);
     shader.setFloat(1, size.width);
     shader.setFloat(2, size.height);
+    shader.setFloat(3, impact);
 
     final paint = Paint()..shader = shader;
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
@@ -1017,6 +1037,6 @@ class ShaderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ShaderPainter oldDelegate) {
-    return oldDelegate.time != time;
+    return oldDelegate.time != time || oldDelegate.impact != impact;
   }
 }
