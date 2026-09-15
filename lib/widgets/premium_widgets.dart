@@ -3,29 +3,122 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../theme/resume_theme.dart';
 
+class TileZoomManager extends ChangeNotifier {
+  static final TileZoomManager instance = TileZoomManager._();
+  TileZoomManager._();
+
+  void reset() {
+    notifyListeners();
+  }
+}
+
+class ZoomWrapper extends StatefulWidget {
+  final Widget child;
+  final double scale;
+  final double translateY;
+  final VoidCallback? onTap;
+  final bool useScale;
+  final bool useTranslate;
+
+  const ZoomWrapper({
+    super.key,
+    required this.child,
+    this.scale = 1.05,
+    this.translateY = -8.0,
+    this.onTap,
+    this.useScale = true,
+    this.useTranslate = true,
+  });
+
+  @override
+  State<ZoomWrapper> createState() => _ZoomWrapperState();
+}
+
+class _ZoomWrapperState extends State<ZoomWrapper> {
+  bool _isHovered = false;
+  bool _isClicked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    TileZoomManager.instance.addListener(_handleReset);
+  }
+
+  @override
+  void dispose() {
+    TileZoomManager.instance.removeListener(_handleReset);
+    super.dispose();
+  }
+
+  void _handleReset() {
+    if (mounted && _isClicked) {
+      setState(() {
+        _isClicked = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isActive = _isHovered || _isClicked;
+    final double currentScale = isActive && widget.useScale ? widget.scale : 1.0;
+    final double currentTranslateY = isActive && widget.useTranslate ? widget.translateY : 0.0;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      cursor: widget.onTap != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
+      child: GestureDetector(
+        onTap: () {
+          setState(() => _isClicked = true);
+          widget.onTap?.call();
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 400),
+          curve: const Cubic(0.16, 1, 0.3, 1),
+          transform: Matrix4.identity()
+            ..translate(0.0, currentTranslateY)
+            ..scale(currentScale),
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
 class DoubleBezelCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final ResumeTheme theme;
+  final bool isZoomable;
 
   const DoubleBezelCard({
     super.key,
     required this.child,
     required this.theme,
     this.padding,
+    this.isZoomable = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       decoration: theme.outerShellDecoration(),
-      padding: const EdgeInsets.all(6), // Standard double-bezel padding
+      padding: const EdgeInsets.all(6),
       child: Container(
         decoration: theme.innerCoreDecoration(),
         padding: padding ?? const EdgeInsets.all(24),
         child: child,
       ),
     );
+
+    if (isZoomable) {
+      return ZoomWrapper(
+        translateY: -4.0,
+        child: card,
+      );
+    }
+    return card;
   }
 }
 
@@ -52,44 +145,44 @@ class _BentoCardState extends State<BentoCard> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      cursor: widget.onTap != null ? SystemMouseCursors.click : SystemMouseCursors.basic,
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 400),
-          curve: const Cubic(0.16, 1, 0.3, 1),
-          transform: Matrix4.identity()
-            ..translate(0.0, _isHovered && widget.onTap != null ? -4.0 : 0.0),
-          child: Container(
-            decoration: widget.theme.outerShellDecoration().copyWith(
-              border: Border.all(
-                color: _isHovered && widget.onTap != null
-                    ? widget.theme.accentColor.withOpacity(0.4)
-                    : widget.theme.borderColor,
-                width: 1,
-              ),
+    // We'll use the ZoomWrapper inside BentoCard's build or just replace BentoCard's logic
+    // Actually, BentoCard has its own complex decoration animation. 
+    // Let's keep the logic inside BentoCard but use the shared state if possible? 
+    // No, let's just keep the implementation I just wrote for BentoCard as it handles shadows too.
+    
+    // Wait, I should probably use the ZoomWrapper for BentoCard too to be consistent with the click behavior.
+    
+    return ZoomWrapper(
+      onTap: widget.onTap,
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Container(
+          decoration: widget.theme.outerShellDecoration().copyWith(
+            border: Border.all(
+              color: _isHovered && widget.onTap != null
+                  ? widget.theme.accentColor.withOpacity(0.4)
+                  : widget.theme.borderColor,
+              width: 1,
             ),
-            padding: const EdgeInsets.all(6),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 400),
-              curve: const Cubic(0.16, 1, 0.3, 1),
-              decoration: widget.theme.innerCoreDecoration().copyWith(
-                boxShadow: _isHovered && widget.onTap != null
-                    ? [
-                        BoxShadow(
-                          color: widget.theme.accentColor.withOpacity(widget.theme.isDark ? 0.05 : 0.03),
-                          blurRadius: 24,
-                          offset: const Offset(0, 8),
-                        )
-                      ]
-                    : widget.theme.cardShadow,
-              ),
-              padding: widget.padding ?? const EdgeInsets.all(28),
-              child: widget.child,
+          ),
+          padding: const EdgeInsets.all(6),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
+            curve: const Cubic(0.16, 1, 0.3, 1),
+            decoration: widget.theme.innerCoreDecoration().copyWith(
+              boxShadow: _isHovered
+                  ? [
+                      BoxShadow(
+                        color: widget.theme.accentColor.withOpacity(widget.theme.isDark ? 0.08 : 0.05),
+                        blurRadius: 32,
+                        offset: const Offset(0, 12),
+                      )
+                    ]
+                  : widget.theme.cardShadow,
             ),
+            padding: widget.padding ?? const EdgeInsets.all(28),
+            child: widget.child,
           ),
         ),
       ),
@@ -227,7 +320,7 @@ class HeaderBadge extends StatelessWidget {
   }
 }
 
-class SocialLinkPill extends StatelessWidget {
+class SocialLinkPill extends StatefulWidget {
   final String label;
   final String value;
   final IconData icon;
@@ -243,8 +336,15 @@ class SocialLinkPill extends StatelessWidget {
     required this.theme,
   });
 
+  @override
+  State<SocialLinkPill> createState() => _SocialLinkPillState();
+}
+
+class _SocialLinkPillState extends State<SocialLinkPill> {
+  bool _isHovered = false;
+
   Future<void> _launchUrl() async {
-    final uri = Uri.parse(url);
+    final uri = Uri.parse(widget.url);
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     }
@@ -252,58 +352,73 @@ class SocialLinkPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return ZoomWrapper(
       onTap: _launchUrl,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.borderColor, width: 0.5),
-          color: theme.surfaceColor,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: theme.shellColor,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, size: 16, color: theme.textSecondary),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _isHovered ? widget.theme.accentColor.withOpacity(0.5) : widget.theme.borderColor,
+              width: 0.5,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: theme.label.copyWith(fontSize: 8, color: theme.textSecondary),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    style: theme.body.copyWith(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: theme.textPrimary,
+            color: widget.theme.surfaceColor,
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: widget.theme.accentColor.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
+                : null,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: widget.theme.shellColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(widget.icon, size: 16, color: widget.theme.textSecondary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.label,
+                      style: widget.theme.label.copyWith(fontSize: 8, color: widget.theme.textSecondary),
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.value,
+                      style: widget.theme.body.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: widget.theme.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Icon(Icons.arrow_outward, size: 14, color: theme.textMuted),
-          ],
+              Icon(Icons.arrow_outward, size: 14, color: widget.theme.textMuted),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class ClickToCopyTile extends StatelessWidget {
+class ClickToCopyTile extends StatefulWidget {
   final String label;
   final String value;
   final IconData icon;
@@ -317,13 +432,20 @@ class ClickToCopyTile extends StatelessWidget {
     required this.theme,
   });
 
+  @override
+  State<ClickToCopyTile> createState() => _ClickToCopyTileState();
+}
+
+class _ClickToCopyTileState extends State<ClickToCopyTile> {
+  bool _isHovered = false;
+
   void _copyToClipboard(BuildContext context) {
-    Clipboard.setData(ClipboardData(text: value));
+    Clipboard.setData(ClipboardData(text: widget.value));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Copied "$value" to clipboard.'),
+        content: Text('Copied "${widget.value}" to clipboard.'),
         duration: const Duration(seconds: 2),
-        backgroundColor: theme.accentColor,
+        backgroundColor: widget.theme.accentColor,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
@@ -332,51 +454,66 @@ class ClickToCopyTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return ZoomWrapper(
       onTap: () => _copyToClipboard(context),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.borderColor, width: 0.5),
-          color: theme.surfaceColor,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: theme.shellColor,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(icon, size: 16, color: theme.textSecondary),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: _isHovered ? widget.theme.accentColor.withOpacity(0.5) : widget.theme.borderColor,
+              width: 0.5,
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: theme.label.copyWith(fontSize: 8, color: theme.textSecondary),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    value,
-                    style: theme.body.copyWith(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: theme.textPrimary,
+            color: widget.theme.surfaceColor,
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: widget.theme.accentColor.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
+                : null,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: widget.theme.shellColor,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(widget.icon, size: 16, color: widget.theme.textSecondary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.label,
+                      style: widget.theme.label.copyWith(fontSize: 8, color: widget.theme.textSecondary),
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Text(
+                      widget.value,
+                      style: widget.theme.body.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: widget.theme.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Icon(Icons.copy, size: 13, color: theme.textMuted),
-          ],
+              Icon(Icons.copy, size: 13, color: widget.theme.textMuted),
+            ],
+          ),
         ),
       ),
     );

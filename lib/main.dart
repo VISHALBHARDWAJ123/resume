@@ -237,8 +237,13 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
     return Scaffold(
       backgroundColor: theme.backgroundColor,
       body: SafeArea(
-        child: Stack(
-          children: [
+        child: GestureDetector(
+          onTap: () {
+            TileZoomManager.instance.reset();
+          },
+          behavior: HitTestBehavior.opaque,
+          child: Stack(
+            children: [
             // Shader Background
             if (_shader != null)
               AnimatedBuilder(
@@ -299,7 +304,7 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildSelectedLayout(ResumeTheme theme, bool isDesktop) {
