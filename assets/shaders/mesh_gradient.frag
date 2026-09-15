@@ -5,6 +5,7 @@
 uniform float uTime;
 uniform vec2 uSize;
 uniform float uSectionImpact; // 0.0 to 1.0 based on interaction
+uniform float uIsDark;       // 1.0 for dark mode, 0.0 for light mode
 
 out vec4 fragColor;
 
@@ -76,12 +77,25 @@ void main() {
         if (t > 20.0) break;
     }
 
-    // Color changes based on interaction
-    vec3 baseCol = mix(vec3(0.01, 0.011, 0.012), vec3(0.02, 0.005, 0.015), uSectionImpact);
-    vec3 col = vec3(acc * baseCol.x, acc * baseCol.y + acc2 * 0.002, acc * baseCol.z + acc2 * 0.005);
+    // Color changes based on interaction and theme
+    vec3 darkBase = mix(vec3(0.01, 0.011, 0.012), vec3(0.02, 0.005, 0.015), uSectionImpact);
+    vec3 lightBase = mix(vec3(0.96, 0.97, 0.98), vec3(0.92, 0.94, 0.98), uSectionImpact);
 
-    // Add interaction highlights
-    col += vec3(0.1, 0.2, 0.3) * uSectionImpact * exp(-t * 0.1);
+    vec3 baseCol = mix(lightBase, darkBase, uIsDark);
 
-    fragColor = vec4(col, 1.0 - t * 0.03);
+    vec3 col;
+    if (uIsDark > 0.5) {
+        col = vec3(acc * baseCol.x, acc * baseCol.y + acc2 * 0.002, acc * baseCol.z + acc2 * 0.005);
+        // Add interaction highlights
+        col += vec3(0.1, 0.2, 0.3) * uSectionImpact * exp(-t * 0.1);
+    } else {
+        // High-key light theme colors (subtle shadows instead of light accumulation)
+        float shad = clamp(1.0 - acc * 0.015, 0.0, 1.0);
+        col = baseCol * (0.8 + 0.2 * shad);
+        // Add soft highlights in light mode
+        col = mix(col, vec3(1.0), acc2 * 0.01);
+    }
+
+    float alpha = mix(0.4, 1.0 - t * 0.03, uIsDark);
+    fragColor = vec4(col, alpha);
 }

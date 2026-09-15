@@ -240,7 +240,7 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
         child: Stack(
           children: [
             // Shader Background
-            if (_isDark && _shader != null)
+            if (_shader != null)
               AnimatedBuilder(
                 animation: _shaderController,
                 builder: (context, _) {
@@ -249,6 +249,7 @@ class _ResumePageState extends State<ResumePage> with TickerProviderStateMixin {
                       shader: _shader!,
                       time: _stopwatch.elapsedMilliseconds / 1000.0,
                       impact: _sectionImpact,
+                      isDark: _isDark ? 1.0 : 0.0,
                     ),
                     child: Container(),
                   );
@@ -1021,8 +1022,14 @@ class ShaderPainter extends CustomPainter {
   final ui.FragmentShader shader;
   final double time;
   final double impact;
+  final double isDark;
 
-  ShaderPainter({required this.shader, required this.time, required this.impact});
+  ShaderPainter({
+    required this.shader,
+    required this.time,
+    required this.impact,
+    required this.isDark,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1030,6 +1037,7 @@ class ShaderPainter extends CustomPainter {
     shader.setFloat(1, size.width);
     shader.setFloat(2, size.height);
     shader.setFloat(3, impact);
+    shader.setFloat(4, isDark);
 
     final paint = Paint()..shader = shader;
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), paint);
@@ -1037,6 +1045,6 @@ class ShaderPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ShaderPainter oldDelegate) {
-    return oldDelegate.time != time || oldDelegate.impact != impact;
+    return oldDelegate.time != time || oldDelegate.impact != impact || oldDelegate.isDark != isDark;
   }
 }
