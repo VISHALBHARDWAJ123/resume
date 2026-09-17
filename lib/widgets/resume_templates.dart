@@ -227,37 +227,36 @@ class ModernLayout extends ResumeLayout {
               ...data.experiences.asMap().entries.map((entry) {
                 final idx = entry.key;
                 final job = entry.value;
-                return IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Column(
-                        children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: theme.accentColor,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: theme.backgroundColor, width: 2),
-                            ),
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Column(
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: theme.accentColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: theme.backgroundColor, width: 2),
                           ),
-                          Expanded(
-                            child: Container(
-                              width: 1.5,
-                              color: idx == data.experiences.length - 1 ? Colors.transparent : theme.borderColor,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 24.0),
-                          child: DoubleBezelCard(
-                            theme: theme,
-                            padding: const EdgeInsets.all(20),
-                            child: Column(
+                        ),
+                        Container(
+                          width: 1.5,
+                          height: 100, // Fallback minimal line if content is very short, but typically it expands
+                          constraints: const BoxConstraints(minHeight: 40),
+                          color: idx == data.experiences.length - 1 ? Colors.transparent : theme.borderColor,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 32.0),
+                        child: DoubleBezelCard(
+                          theme: theme,
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
@@ -312,7 +311,7 @@ class ModernLayout extends ResumeLayout {
                         ),
                       ),
                     ],
-                  ),
+
                 );
               }),
             ],
@@ -640,27 +639,33 @@ class ProfessionalLayout extends ResumeLayout {
   }
 
   Widget _buildExperienceItem(WorkExperience exp) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(bottom: 32),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: Text('${exp.company} — ${exp.location}', style: theme.body.copyWith(fontWeight: FontWeight.bold, color: Colors.black))),
-              Text(exp.period, style: theme.caption.copyWith(fontWeight: FontWeight.bold, color: Colors.black)),
+              Expanded(child: Text('${exp.company} — ${exp.location}', style: theme.h3.copyWith(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16))),
+              Text(exp.period, style: theme.caption.copyWith(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 11)),
             ],
           ),
-          Text(exp.role, style: theme.bodySecondary.copyWith(fontStyle: FontStyle.italic, color: Colors.black54)),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
+          Text(exp.role, style: theme.bodySecondary.copyWith(fontStyle: FontStyle.italic, color: Colors.black54, fontSize: 13)),
+          const SizedBox(height: 12),
           ...exp.highlights.map((h) => Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 4),
+            padding: const EdgeInsets.only(left: 8, bottom: 6),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('• ', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)),
-                Expanded(child: Text(h, style: theme.bodySecondary.copyWith(color: Colors.black87))),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6, right: 8),
+                  child: Container(width: 4, height: 4, decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle)),
+                ),
+                Expanded(child: Text(h, style: theme.bodySecondary.copyWith(color: Colors.black87, height: 1.5))),
               ],
             ),
           )),

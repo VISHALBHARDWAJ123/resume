@@ -46,12 +46,25 @@ void _buildModernPdf(pw.Document doc, ResumeData data, pw.Font reg, pw.Font bold
       build: (pw.Context context) => [
         pw.Header(
           level: 0,
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
+          child: pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: pw.CrossAxisAlignment.end,
             children: [
-              pw.Text(data.personalInfo.name, style: pw.TextStyle(font: serif, fontSize: 32)),
-              pw.Text(data.personalInfo.title, style: pw.TextStyle(font: bold, fontSize: 14, color: PdfColors.teal)),
-              pw.SizedBox(height: 10),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(data.personalInfo.name, style: pw.TextStyle(font: serif, fontSize: 32)),
+                  pw.Text(data.personalInfo.title, style: pw.TextStyle(font: bold, fontSize: 14, color: PdfColors.teal)),
+                ],
+              ),
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.end,
+                children: [
+                  pw.Text(data.personalInfo.email, style: pw.TextStyle(font: reg, fontSize: 9)),
+                  pw.Text(data.personalInfo.phone, style: pw.TextStyle(font: reg, fontSize: 9)),
+                  pw.Text(data.personalInfo.location, style: pw.TextStyle(font: reg, fontSize: 9)),
+                ],
+              ),
             ],
           ),
         ),
